@@ -4,6 +4,7 @@ import LoginPage from "./pages/LoginPage";
 import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import { useAuth } from "./context/AuthContext";
 import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
+import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 
 export const AppRoutes = () => {
     const { isAuthenticated, user, isReady } = useAuth();
@@ -40,6 +41,8 @@ export const AppRoutes = () => {
             <Route path="/materiales" element={<MaterialPage />} />
             <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
             <Route path="*" element={<Navigate to="/materiales" replace />} />
+            <Route path="/usuarioslistar" element={<UsuariosPage />} />
+            <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
   
         </Routes>
     );
