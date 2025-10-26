@@ -1,0 +1,231 @@
+import React, { useEffect, useState } from "react";
+import {
+  getRoles,
+  createUsuario,
+  createDocente,
+  RolDTO,
+  UsuarioCreateRequest,
+  UsuarioCreateResponse,
+  DocenteCreateRequest,
+} from "../../lib/api/docentes";
+
+// --- Interfaces basadas en tu C# ---
+
+// Las interfaces y llamadas a API se movieron a ../../lib/api/docentes
+
+// Estado inicial para el formulario combinado
+const initialFormData = {
+  // Campos de Usuario
+  nombreUsuario: "",
+  email: "",
+  contrasena: "",
+  rolId: "", // Se usa string para el <select>
+  // Campos de Docente
+  nombre: "",
+  apellido: "",
+  cedulaIdentidad: "",
+};
+
+const CrearUsuarioDocentePage: React.FC = () => {
+  const [formData, setFormData] = useState(initialFormData);
+  const [roles, setRoles] = useState<RolDTO[]>([]);
+  
+  // Estados para manejar la UI
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // 1. Cargar los Roles para el <select> cuando el componente se monta
+  useEffect(() => {
+    const listarRoles = async () => {
+      try {
+        const response = await getRoles();
+        setRoles(response.data);
+      } catch (err) {
+        console.error("Error al cargar roles: ", err);
+        setError("Error al cargar roles. Revise la conexión con la API.");
+      }
+    };
+    listarRoles();
+  }, []);
+
+  // 2. Manejador para actualizar el estado del formulario
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // 3. Manejador para enviar el formulario
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    if (!formData.rolId) {
+      setError("Por favor, selecciona un rol.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // --- PASO 1: Crear el Usuario ---
+      const usuarioData: UsuarioCreateRequest = {
+        rolId: parseInt(formData.rolId, 10),
+        nombreUsuario: formData.nombreUsuario,
+        email: formData.email,
+        contrasena: formData.contrasena,
+      };
+
+      const usuarioResponse = await createUsuario(usuarioData);
+      
+      const newUsuarioId = usuarioResponse.data.id;
+
+      // --- PASO 2: Crear el Docente con el ID del Usuario ---
+      const docenteData: DocenteCreateRequest = {
+        usuarioId: newUsuarioId,
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        cedulaIdentidad: formData.cedulaIdentidad,
+      };
+
+  await createDocente(docenteData);
+
+      // --- Éxito ---
+      setSuccess(`¡Usuario y Docente creados con éxito! (Usuario ID: ${newUsuarioId})`);
+      setFormData(initialFormData); // Limpiar formulario
+
+    } catch (err: any) {
+      // Manejo de errores (intenta leer el mensaje de la API de ASP.NET)
+      let errorMessage = "Ocurrió un error al guardar.";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = `Error de la API: ${err.response.data.message}`;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      console.error(err);
+
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-center">
+        Registrar Nuevo Usuario (Docente)
+      </h1>
+
+      {/* Formulario de Creación (basado en tu estilo) */}
+      <form onSubmit={handleSubmit} className="mb-6 bg-white p-4 rounded-2xl shadow">
+        
+        {/* --- Mensajes de estado --- */}
+        {error && (
+          <div className="p-3 mb-4 bg-red-100 text-red-700 border border-red-300 rounded">
+            {error}
+          </div>
+        )}
+        {success && (
+           <div className="p-3 mb-4 bg-green-100 text-green-700 border border-green-300 rounded">
+            {success}
+          </div>
+        )}
+
+        {/* --- Campos del Docente --- */}
+        <fieldset className="border p-4 rounded mb-4">
+          <legend className="font-semibold px-2">Datos Personales (Docente)</legend>
+          <div className="grid gap-3 md:grid-cols-3">
+            <input
+              type="text"
+              name="nombre"
+              placeholder="Nombre(s)"
+              value={formData.nombre}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+            <input
+              type="text"
+              name="apellido"
+              placeholder="Apellido(s)"
+              value={formData.apellido}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+            <input
+              type="text"
+              name="cedulaIdentidad"
+              placeholder="Cédula de Identidad"
+              value={formData.cedulaIdentidad}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+          </div>
+        </fieldset>
+
+        {/* --- Campos del Usuario --- */}
+        <fieldset className="border p-4 rounded">
+          <legend className="font-semibold px-2">Datos de Acceso (Usuario)</legend>
+          <div className="grid gap-3 md:grid-cols-2">
+            <input
+              type="text"
+              name="nombreUsuario"
+              placeholder="Nombre de Usuario"
+              value={formData.nombreUsuario}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Correo Electrónico"
+              value={formData.email}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+            <input
+              type="password"
+              name="contrasena"
+              placeholder="Contraseña"
+              value={formData.contrasena}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            />
+            <select
+              name="rolId"
+              value={formData.rolId}
+              onChange={handleChange}
+              className="border p-2 rounded"
+              required
+            >
+              <option value="" disabled>-- Seleccionar Rol --</option>
+              {roles.map((rol) => (
+                <option key={rol.id} value={rol.id}>
+                  {rol.nombreRol}
+                </option>
+              ))}
+            </select>
+          </div>
+        </fieldset>
+
+        {/* --- Botón de Envío --- */}
+        <div className="mt-4 text-center">
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+            disabled={isLoading}
+          >
+            {isLoading ? "Guardando..." : "Guardar"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CrearUsuarioDocentePage;

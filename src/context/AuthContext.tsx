@@ -12,6 +12,7 @@ export interface AuthUser {
 interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isReady: boolean;
   login: (payload: AuthUser) => void;
   logout: () => void;
 }
@@ -21,6 +22,7 @@ const STORAGE_KEY = "auth_user";
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -28,16 +30,16 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     }
 
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as AuthUser;
+        setUser(parsed);
+      } catch (error) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
     }
 
-    try {
-      const parsed = JSON.parse(stored) as AuthUser;
-      setUser(parsed);
-    } catch (error) {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    setIsReady(true);
   }, []);
 
   const login = (payload: AuthUser) => {
@@ -58,10 +60,11 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     () => ({
       user,
       isAuthenticated: Boolean(user),
+      isReady,
       login,
       logout,
     }),
-    [user]
+    [user, isReady]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
