@@ -70,19 +70,18 @@ const MaterialPage: React.FC = () => {
       const values = await form.validateFields();
       if (selectedMaterial) {
         await updateMaterial(selectedMaterial.id, values);
-        // Obtener material actualizado (incluye descripcion en GET by id)
         const updated = await getMaterialById(selectedMaterial.id);
         setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updated.data : m));
         message.success('Material actualizado exitosamente');
       } else {
-        const res = await createMaterial(values);
-        // backend devuelve { id }
+        // Al crear, cantidadDisponible = cantidadTotal
+        const toSend = { ...values, cantidadDisponible: values.cantidadTotal };
+        const res = await createMaterial(toSend);
         const newId = res.data?.id;
         if (newId) {
           const created = await getMaterialById(newId);
           setMaterials(prev => [created.data, ...prev]);
         } else {
-          // fallback: recargar lista si no se obtuvo id
           await fetchData();
         }
         message.success('Material creado exitosamente');
@@ -163,6 +162,11 @@ const MaterialPage: React.FC = () => {
       key: 'cantidadTotal',
     },
     {
+      title: 'Cantidad Disponible',
+      dataIndex: 'cantidadDisponible',
+      key: 'cantidadDisponible',
+    },
+    {
       title: 'Descripción',
       dataIndex: 'descripcion',
       key: 'descripcion',
@@ -180,7 +184,6 @@ const MaterialPage: React.FC = () => {
         >
           <Option value="Disponible">Disponible</Option>
           <Option value="No Disponible">No Disponible</Option>
-          <Option value="En Mantenimiento">En Mantenimiento</Option>
         </Select>
       ),
     },
@@ -291,6 +294,15 @@ const MaterialPage: React.FC = () => {
           >
             <InputNumber min={1} />
           </Form.Item>
+          {selectedMaterial && (
+            <Form.Item
+              name="cantidadDisponible"
+              label="Cantidad Disponible"
+              rules={[{ required: true, message: 'Por favor ingrese la cantidad disponible' }]}
+            >
+              <InputNumber min={0} max={form.getFieldValue('cantidadTotal') || undefined} />
+            </Form.Item>
+          )}
           <Form.Item
             name="estado"
             label="Estado"
@@ -300,7 +312,6 @@ const MaterialPage: React.FC = () => {
             <Select>
               <Option value="Disponible">Disponible</Option>
               <Option value="No Disponible">No Disponible</Option>
-              <Option value="En Mantenimiento">En Mantenimiento</Option>
             </Select>
           </Form.Item>
         </Form>
