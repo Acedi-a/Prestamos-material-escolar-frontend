@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllMaterials, createMaterial, updateMaterialStatus, updateMaterial, getMaterialById, IMaterial } from '../../lib/api/materiales';
 import { getAllCategories, createCategory, updateCategory, deleteCategory, ICategoria } from '../../lib/api/categoria';
+import { registrarReparacion } from '../../lib/api/reparaciones';
 import {
   Table,
   Button,
@@ -11,7 +12,8 @@ import {
   InputNumber,
   message,
   Space,
-  Popconfirm
+  Popconfirm,
+  DatePicker
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
@@ -30,6 +32,8 @@ const MaterialPage: React.FC = () => {
   const [selectedMaterial, setSelectedMaterial] = useState<IMaterial | null>(null);
   const [form] = Form.useForm();
   const [categoryForm] = Form.useForm();
+  const [repairForm] = Form.useForm();
+  const [reparacionModalVisible, setReparacionModalVisible] = useState(false);
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -63,6 +67,47 @@ const MaterialPage: React.FC = () => {
     setSelectedMaterial(material);
     form.setFieldsValue(material);
     setMaterialModalVisible(true);
+  };
+
+  // Reparación: abrir modal
+  const openReparacionModal = (material: IMaterial) => {
+    setSelectedMaterial(material);
+    repairForm.resetFields();
+    repairForm.setFieldsValue({
+      fechaEnvio: null,
+      descripcionFalla: '',
+      costo: undefined,
+      cantidad: material.cantidadDisponible > 0 ? 1 : 0,
+    });
+    setReparacionModalVisible(true);
+  };
+
+  const handleReparacionSubmit = async () => {
+    if (!selectedMaterial) return;
+    try {
+      const values = await repairForm.validateFields();
+      const fechaVal: any = values.fechaEnvio;
+      const fechaIso = fechaVal && typeof fechaVal.toISOString === 'function'
+        ? fechaVal.toISOString()
+        : new Date().toISOString();
+
+      const payload = {
+        materialId: selectedMaterial.id,
+        fechaEnvio: fechaIso,
+        descripcionFalla: values.descripcionFalla,
+        costo: values.costo ?? null,
+        cantidad: values.cantidad,
+      };
+
+      await registrarReparacion(payload);
+      // Obtener material actualizado y actualizar en lista
+      const updated = await getMaterialById(selectedMaterial.id);
+      setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updated.data : m));
+      message.success('Enviado a reparación correctamente');
+      setReparacionModalVisible(false);
+    } catch (error: any) {
+      message.error(error?.message || 'Error al enviar a reparación');
+    }
   };
 
   const handleMaterialSubmit = async () => {
@@ -191,10 +236,18 @@ const MaterialPage: React.FC = () => {
       title: 'Acciones',
       key: 'actions',
       render: (_: any, record: IMaterial) => (
-        <Button
-          icon={<EditOutlined />}
-          onClick={() => handleEditMaterial(record)}
-        />
+        <Space>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleEditMaterial(record)}
+          />
+          <Button
+            onClick={() => openReparacionModal(record)}
+            disabled={!(record.cantidadDisponible > 0)}
+          >
+            Enviar a reparación
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -313,6 +366,48 @@ const MaterialPage: React.FC = () => {
               <Option value="Disponible">Disponible</Option>
               <Option value="No Disponible">No Disponible</Option>
             </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal para Reparación */}
+      <Modal
+        title={selectedMaterial ? `Enviar a reparación - ${selectedMaterial.nombreMaterial}` : 'Enviar a reparación'}
+        open={reparacionModalVisible}
+        onOk={handleReparacionSubmit}
+        onCancel={() => setReparacionModalVisible(false)}
+      >
+        <Form form={repairForm} layout="vertical">
+          <Form.Item
+            name="fechaEnvio"
+            label="Fecha de envío"
+            rules={[{ required: false }]}
+          >
+            <DatePicker showTime style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="descripcionFalla"
+            label="Descripción de la falla"
+            rules={[{ required: true, message: 'Ingrese la descripción de la falla' }]}
+          >
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item
+            name="costo"
+            label="Costo (opcional)"
+          >
+            <InputNumber min={0} style={{ width: '100%' }} step={0.01} />
+          </Form.Item>
+          <Form.Item
+            name="cantidad"
+            label="Cantidad a enviar"
+            rules={[{ required: true, message: 'Ingrese la cantidad a enviar' }]}
+          >
+            <InputNumber
+              min={1}
+              max={selectedMaterial ? selectedMaterial.cantidadDisponible : undefined}
+              style={{ width: '100%' }}
+            />
           </Form.Item>
         </Form>
       </Modal>
