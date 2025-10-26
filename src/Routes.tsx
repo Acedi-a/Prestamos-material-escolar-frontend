@@ -1,9 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import MaterialPage from "./pages/encargadoPages/materialPage";
 import LoginPage from "./pages/LoginPage";
-import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import { useAuth } from "./context/AuthContext";
+import EncargadoLayout from "./components/layout/EncargadoLayout";
+import DocenteLayout from "./components/layout/DocenteLayout";
+import MaterialPage from "./pages/encargadoPages/materialPage";
 import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
+import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 
 export const AppRoutes = () => {
@@ -25,25 +27,27 @@ export const AppRoutes = () => {
         );
     }
 
-    // Docente: sus rutas
+    // Docente: sus rutas con layout y mapeo dinámico
     if (role === "docente") {
         return (
             <Routes>
-                <Route path="/docente" element={<DocenteDashboard />} />
+                <Route element={<DocenteLayout />}>
+                    <Route path="/docente" element={<DocenteDashboard />} />
+                </Route>
                 <Route path="*" element={<Navigate to="/docente" replace />} />
             </Routes>
         );
     }
 
-    // Encargado/Admin por defecto
+    // Encargado/Admin por defecto con layout y mapeo dinámico
     return (
         <Routes>
-            <Route path="/materiales" element={<MaterialPage />} />
-            <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
+            <Route element={<EncargadoLayout />}>
+                <Route path="/materiales" element={<MaterialPage />} />
+                <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
+                <Route path="/usuarioslistar" element={<UsuariosPage />} />
+            </Route>
             <Route path="*" element={<Navigate to="/materiales" replace />} />
-            <Route path="/usuarioslistar" element={<UsuariosPage />} />
-            <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
-  
         </Routes>
     );
 };

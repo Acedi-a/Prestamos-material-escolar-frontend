@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import api from "../lib/api";
 
 export interface AuthUser {
   usuarioId: number;
@@ -34,6 +35,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       try {
         const parsed = JSON.parse(stored) as AuthUser;
         setUser(parsed);
+        // set auth header
+        api.defaults.headers.common["Authorization"] = `Bearer ${parsed.token}`;
       } catch (error) {
         window.localStorage.removeItem(STORAGE_KEY);
       }
@@ -47,6 +50,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     }
+    api.defaults.headers.common["Authorization"] = `Bearer ${payload.token}`;
   };
 
   const logout = () => {
@@ -54,6 +58,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
+    delete api.defaults.headers.common["Authorization"];
   };
 
   const value = useMemo(

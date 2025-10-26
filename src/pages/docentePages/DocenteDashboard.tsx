@@ -2,6 +2,7 @@ import { Card, Typography } from "antd";
 
 const { Title, Paragraph } = Typography;
 
+
 const DocenteDashboard: React.FC = () => {
   return (
     <div style={{ padding: "24px", display: "flex", justifyContent: "center" }}>
@@ -15,5 +16,6 @@ const DocenteDashboard: React.FC = () => {
     </div>
   );
 };
+
 
 export default DocenteDashboard;
