@@ -7,6 +7,8 @@ import MaterialPage from "./pages/encargadoPages/materialPage";
 import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
 import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
+import SolicitarMaterialPage from "./pages/docentePages/SolicitarMaterialPage";
+import MisSolicitudesPage from "./pages/docentePages/MisSolicitudesPage";
 
 export const AppRoutes = () => {
     const { isAuthenticated, user, isReady } = useAuth();
@@ -33,6 +35,8 @@ export const AppRoutes = () => {
             <Routes>
                 <Route element={<DocenteLayout />}>
                     <Route path="/docente" element={<DocenteDashboard />} />
+                    <Route path="/docente/solicitar" element={<SolicitarMaterialPage />} />
+                    <Route path="/docente/solicitudes" element={<MisSolicitudesPage />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/docente" replace />} />
             </Routes>
