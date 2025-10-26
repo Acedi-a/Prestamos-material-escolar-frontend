@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Table, Button, message, Space, Popconfirm } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom'; 
+import { useAuth } from '../../context/AuthContext';
 
 
 const API_URL = "https://localhost:7282/api"; 
@@ -24,7 +25,7 @@ interface IRol {
 const UsuariosPage: React.FC = () => {
   
   const navigate = useNavigate(); 
-
+  const { user } = useAuth();
   
   const [usuarios, setUsuarios] = useState<IUsuario[]>([]);
   const [roles, setRoles] = useState<IRol[]>([]);
@@ -32,18 +33,38 @@ const UsuariosPage: React.FC = () => {
   
   
   useEffect(() => {
-    fetchData();
-  }, []);
+    
+    if (user?.usuarioId) {
+      fetchData();
+    }
+  }, [user]); 
 
   const fetchData = async () => {
+    
+    if (!user?.usuarioId) return; 
+
     try {
       setLoading(true);
       const [usuariosRes, rolesRes] = await Promise.all([
         axios.get<IUsuario[]>(`${API_URL}/Usuario`),
         axios.get<IRol[]>(`${API_URL}/Rol`)
       ]);
-      setUsuarios(usuariosRes.data);
-      setRoles(rolesRes.data);
+
+      const allUsers = usuariosRes.data;
+      const allRoles = rolesRes.data;
+      const currentUserId = user.usuarioId;
+
+      
+      
+      
+      const filteredUsers = allUsers.filter(u => {
+        return u.id !== currentUserId; 
+      });
+     
+
+      setUsuarios(filteredUsers); 
+      setRoles(allRoles); 
+      
     } catch (error) {
       message.error('Error al cargar los datos');
       console.error(error);
