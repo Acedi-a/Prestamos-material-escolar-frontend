@@ -24,3 +24,13 @@ export const updateMaterialStatus = (id: number, estado: string) =>
 	api.put(`/api/Material/${id}/estado`, { estado });
 export const getMaterialAvailability = (id: number) =>
 	api.get<{ cantidadDisponible: number; estado: string }>(`/api/Material/${id}/disponibilidad`);
+
+export const updateMaterial = (id: number, material: Omit<IMaterial, "id">) =>
+	api.put(`/api/Material/${id}`, {
+		categoriaId: material.categoriaId,
+		nombre: material.nombreMaterial,
+		descripcion: material.descripcion,
+		cantidadTotal: material.cantidadTotal,
+		cantidadDisponible: material.cantidadDisponible,
+		estado: material.estado,
+	});

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMaterials, createMaterial, updateMaterialStatus, IMaterial } from '../../lib/api/materiales';
+import { getAllMaterials, createMaterial, updateMaterialStatus, updateMaterial, getMaterialById, IMaterial } from '../../lib/api/materiales';
 import { getAllCategories, createCategory, updateCategory, deleteCategory, ICategoria } from '../../lib/api/categoria';
 import {
   Table,
@@ -27,6 +27,7 @@ const MaterialPage: React.FC = () => {
   const [materialModalVisible, setMaterialModalVisible] = useState(false);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ICategoria | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<IMaterial | null>(null);
   const [form] = Form.useForm();
   const [categoryForm] = Form.useForm();
 
@@ -54,18 +55,41 @@ const MaterialPage: React.FC = () => {
   // Handlers para Material
   const handleAddMaterial = () => {
     form.resetFields();
+    setSelectedMaterial(null);
+    setMaterialModalVisible(true);
+  };
+
+  const handleEditMaterial = (material: IMaterial) => {
+    setSelectedMaterial(material);
+    form.setFieldsValue(material);
     setMaterialModalVisible(true);
   };
 
   const handleMaterialSubmit = async () => {
     try {
       const values = await form.validateFields();
-      await createMaterial(values);
-      message.success('Material creado exitosamente');
+      if (selectedMaterial) {
+        await updateMaterial(selectedMaterial.id, values);
+        // Obtener material actualizado (incluye descripcion en GET by id)
+        const updated = await getMaterialById(selectedMaterial.id);
+        setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updated.data : m));
+        message.success('Material actualizado exitosamente');
+      } else {
+        const res = await createMaterial(values);
+        // backend devuelve { id }
+        const newId = res.data?.id;
+        if (newId) {
+          const created = await getMaterialById(newId);
+          setMaterials(prev => [created.data, ...prev]);
+        } else {
+          // fallback: recargar lista si no se obtuvo id
+          await fetchData();
+        }
+        message.success('Material creado exitosamente');
+      }
       setMaterialModalVisible(false);
-      fetchData();
     } catch (error) {
-      message.error('Error al crear el material');
+      message.error(selectedMaterial ? 'Error al actualizar el material' : 'Error al crear el material');
     }
   };
 
@@ -139,9 +163,10 @@ const MaterialPage: React.FC = () => {
       key: 'cantidadTotal',
     },
     {
-      title: 'Disponibles',
-      dataIndex: 'cantidadDisponible',
-      key: 'cantidadDisponible',
+      title: 'Descripción',
+      dataIndex: 'descripcion',
+      key: 'descripcion',
+      render: (_: any, record: IMaterial) => record.descripcion || '-',
     },
     {
       title: 'Estado',
@@ -157,6 +182,16 @@ const MaterialPage: React.FC = () => {
           <Option value="No Disponible">No Disponible</Option>
           <Option value="En Mantenimiento">En Mantenimiento</Option>
         </Select>
+      ),
+    },
+    {
+      title: 'Acciones',
+      key: 'actions',
+      render: (_: any, record: IMaterial) => (
+        <Button
+          icon={<EditOutlined />}
+          onClick={() => handleEditMaterial(record)}
+        />
       ),
     },
   ];
@@ -217,7 +252,7 @@ const MaterialPage: React.FC = () => {
 
       {/* Modal para Material */}
       <Modal
-        title="Nuevo Material"
+        title={selectedMaterial ? "Editar Material" : "Nuevo Material"}
         open={materialModalVisible}
         onOk={handleMaterialSubmit}
         onCancel={() => setMaterialModalVisible(false)}
