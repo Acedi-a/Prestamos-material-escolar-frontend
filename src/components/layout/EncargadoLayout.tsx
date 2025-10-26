@@ -15,6 +15,7 @@ const EncargadoLayout: React.FC = () => {
   const nav: NavItem[] = [
     { key: "/materiales", label: "Materiales", icon: <DatabaseOutlined /> },
     { key: "/docentecrear", label: "Registrar Docente", icon: <UserAddOutlined /> },
+    { key: "/usuarioslistar", label: "Usuarios", icon: <UserOutlined /> },
   ];
 
   const selectedKeys = (() => {

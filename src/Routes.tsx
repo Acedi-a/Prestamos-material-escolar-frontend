@@ -46,6 +46,7 @@ export const AppRoutes = () => {
                 <Route path="/materiales" element={<MaterialPage />} />
                 <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
                 <Route path="/usuarioslistar" element={<UsuariosPage />} />
+                <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
             </Route>
             <Route path="*" element={<Navigate to="/materiales" replace />} />
         </Routes>
