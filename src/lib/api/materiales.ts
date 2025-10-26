@@ -72,3 +72,12 @@ export const getDocenteByUsuarioId = (usuarioId: number) =>
  */
 export const createSolicitud = (payload: ISolicitudRequest) =>
   api.post<number>("/api/Solicitud", payload); // Esperamos que devuelva el ID
+export const updateMaterial = (id: number, material: Omit<IMaterial, "id">) =>
+	api.put(`/api/Material/${id}`, {
+		categoriaId: material.categoriaId,
+		nombre: material.nombreMaterial,
+		descripcion: material.descripcion,
+		cantidadTotal: material.cantidadTotal,
+		cantidadDisponible: material.cantidadDisponible,
+		estado: material.estado,
+	});
