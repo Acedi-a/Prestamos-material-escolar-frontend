@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ToolOutlined } from "@ant-design/icons";
 import { useAuth } from "../../context/AuthContext";
 import { useMemo, useState } from "react";
 
@@ -16,6 +16,7 @@ const EncargadoLayout: React.FC = () => {
     { key: "/materiales", label: "Materiales", icon: <DatabaseOutlined /> },
     { key: "/docentecrear", label: "Registrar Docente", icon: <UserAddOutlined /> },
     { key: "/usuarioslistar", label: "Usuarios", icon: <UserOutlined /> },
+    { key: "/reparaciones", label: "Reparaciones", icon: <ToolOutlined /> },
   ];
 
   const selectedKeys = (() => {
@@ -46,7 +47,7 @@ const EncargadoLayout: React.FC = () => {
       >
         {/* Logo Section */}
         <div className="flex items-center gap-2.5 p-4 overflow-hidden whitespace-nowrap">
-          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold shadow-[0_2px_8px_rgba(22,119,255,0.35)] flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold shadow-[0_2px_8px_rgba(22,119,255,0.35)] shrink-0">
             PM
           </div>
           {!collapsed && (

@@ -5,6 +5,7 @@ import EncargadoLayout from "./components/layout/EncargadoLayout";
 import DocenteLayout from "./components/layout/DocenteLayout";
 import MaterialPage from "./pages/encargadoPages/materialPage";
 import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
+import ReparacionesPage from "./pages/encargadoPages/ReparacionesPage";
 import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 
@@ -45,6 +46,7 @@ export const AppRoutes = () => {
             <Route element={<EncargadoLayout />}>
                 <Route path="/materiales" element={<MaterialPage />} />
                 <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
+                    <Route path="/reparaciones" element={<ReparacionesPage />} />
                 <Route path="/usuarioslistar" element={<UsuariosPage />} />
                 <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
             </Route>
