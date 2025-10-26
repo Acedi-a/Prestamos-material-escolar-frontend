@@ -1,12 +1,16 @@
 
 import "./App.css";
-import MaterialPage from "./pages/encargadoPages/materialPage";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { AppRoutes } from "./Routes";
 
 function App() {
-
   return (
-    
-    <MaterialPage/>
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import {
-  getAllMaterials,
-  getAllCategories,
-  createMaterial,
-  updateMaterialStatus,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  IMaterial,
-  ICategoria
-} from '../../lib/api';
+import { getAllMaterials, createMaterial, updateMaterialStatus, IMaterial } from '../../lib/api/materiales';
+import { getAllCategories, createCategory, updateCategory, deleteCategory, ICategoria } from '../../lib/api/categoria';
 import {
   Table,
   Button,
