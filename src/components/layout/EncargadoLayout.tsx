@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ToolOutlined } from "@ant-design/icons";
+import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ToolOutlined, SwapOutlined } from "@ant-design/icons";
 import { useAuth } from "../../context/AuthContext";
 import { useMemo, useState } from "react";
 
@@ -17,6 +17,7 @@ const EncargadoLayout: React.FC = () => {
     { key: "/docentecrear", label: "Registrar Docente", icon: <UserAddOutlined /> },
     { key: "/usuarioslistar", label: "Usuarios", icon: <UserOutlined /> },
     { key: "/reparaciones", label: "Reparaciones", icon: <ToolOutlined /> },
+    { key: "/movimientos", label: "Movimientos", icon: <SwapOutlined /> },
   ];
 
   const selectedKeys = (() => {
