@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Table, Button, message, Spin, Modal, List, Typography, Tag, Space, Tabs, Popconfirm,
-    DatePicker // ⬅️ 1. IMPORTAR DatePicker
+    DatePicker, Input
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
+import { EyeOutlined, CheckOutlined, CloseOutlined, InboxOutlined, ReloadOutlined, SearchOutlined, CalendarOutlined } from '@ant-design/icons';
 import {
     ISolicitud,
     ISolicitudCompleta,
@@ -24,6 +24,8 @@ const GestionSolicitudesPage: React.FC = () => {
     // Estados (existentes)
     const [solicitudes, setSolicitudes] = useState<ISolicitud[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
     // Estados del Modal de Detalles (existentes y corregidos)
     const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
@@ -197,50 +199,117 @@ const GestionSolicitudesPage: React.FC = () => {
         },
     ];
 
-    // --- Filtrar datos para las Pestañas (existente) ---
-    const pendientes = solicitudes.filter(s => s.estadoSolicitud.toLowerCase() === 'pendiente');
-    const historial = solicitudes.filter(s => s.estadoSolicitud.toLowerCase() !== 'pendiente');
+    // --- Filtros (búsqueda y rango de fechas) ---
+    const filtered = useMemo(() => {
+        const term = searchTerm.trim().toLowerCase();
+        return solicitudes.filter((s) => {
+            const matchesText = term
+                ? (s.docenteNombre?.toLowerCase().includes(term) || String(s.id).includes(term))
+                : true;
+            const matchesDate = dateRange
+                ? (() => {
+                    if (!s.fechaSolicitud) return false;
+                    const d = dayjs(s.fechaSolicitud);
+                    if (!d.isValid()) return false;
+                    const [start, end] = dateRange;
+                    return d.isAfter(start.startOf('day')) && d.isBefore(end.endOf('day')) || d.isSame(start, 'day') || d.isSame(end, 'day');
+                })()
+                : true;
+            return matchesText && matchesDate;
+        });
+    }, [solicitudes, searchTerm, dateRange]);
+
+    // --- Filtrar datos para las Pestañas ---
+    const pendientes = useMemo(
+        () => filtered.filter(s => (s.estadoSolicitud || '').toLowerCase() === 'pendiente'),
+        [filtered]
+    );
+    const historial = useMemo(
+        () => filtered.filter(s => (s.estadoSolicitud || '').toLowerCase() !== 'pendiente'),
+        [filtered]
+    );
 
     return (
-        <div style={{ padding: '24px' }}>
-            <Title level={2}>Gestión de Solicitudes</Title>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+            {/* Header */}
+            <div className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-30">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                                <InboxOutlined className="text-2xl text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Gestión de Solicitudes</h1>
+                                <p className="text-xs text-gray-500">Revisa, aprueba o rechaza solicitudes de préstamo</p>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex items-center gap-2">
+                            <Button icon={<ReloadOutlined />} onClick={fetchData}>Actualizar</Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            <Tabs defaultActiveKey="1">
-              <TabPane tab={`Pendientes (${pendientes.length})`} key="1">
-                    <Spin spinning={loading}>
-                        <Table
-                            columns={columns}
-                            dataSource={pendientes}
-                            rowKey="id"
-                        />
-                    </Spin>
-                </TabPane>
-                <TabPane tab={`Historial (${historial.length})`} key="2">
-                     <Spin spinning={loading}>
-                        <Table
-                            columns={columns}
-                            dataSource={historial}
-                            rowKey="id"
-                        />
-                    </Spin>
-                </TabPane>
-            </Tabs>
+            {/* Content */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl shadow-sm p-6 md:p-8">
+                    {/* Toolbar */}
+                    <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="px-3 py-2 bg-blue-50 text-blue-600 text-sm font-medium rounded-lg">Pendientes: {pendientes.length}</div>
+                            <div className="px-3 py-2 bg-gray-50 text-gray-700 text-sm font-medium rounded-lg">Total: {filtered.length}</div>
+                        </div>
+                        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                            <Input
+                                allowClear
+                                prefix={<SearchOutlined />}
+                                placeholder="Buscar por docente o #ID"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="md:w-72"
+                            />
+                            <DatePicker.RangePicker
+                                value={dateRange as any}
+                                onChange={(vals) => setDateRange(vals as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+                                allowClear
+                                suffixIcon={<CalendarOutlined />}
+                                className="w-full md:w-80"
+                                format="YYYY-MM-DD"
+                            />
+                            <Button onClick={() => { setSearchTerm(''); setDateRange(null); }}>Limpiar</Button>
+                        </div>
+                    </div>
 
-            {/* --- Modal para ver Detalles (Corregido) --- */}
+                    {/* Tabs + Tables */}
+                    <Tabs defaultActiveKey="1">
+                        <TabPane tab={`Pendientes (${pendientes.length})`} key="1">
+                            <Spin spinning={loading}>
+                                <Table columns={columns} dataSource={pendientes} rowKey="id" />
+                            </Spin>
+                        </TabPane>
+                        <TabPane tab={`Historial (${historial.length})`} key="2">
+                            <Spin spinning={loading}>
+                                <Table columns={columns} dataSource={historial} rowKey="id" />
+                            </Spin>
+                        </TabPane>
+                    </Tabs>
+                </div>
+            </div>
+
+            {/* Modal Detalles */}
             <Modal
                 title={`Detalles de la Solicitud #${selectedSolicitudDetails?.id}`}
                 open={isDetailModalVisible}
                 onCancel={handleCloseDetailModal}
-                footer={[ <Button key="close" onClick={handleCloseDetailModal}>Cerrar</Button> ]}
+                footer={[<Button key="close" onClick={handleCloseDetailModal}>Cerrar</Button>]}
             >
-             {loadingDetails ? (
-                    <div style={{textAlign: 'center', padding: '30px'}}><Spin /></div>
+                {loadingDetails ? (
+                    <div style={{ textAlign: 'center', padding: '30px' }}><Spin /></div>
                 ) : (
                     <>
-                        
                         <Text strong>Estado:</Text>
                         <p>{selectedSolicitudDetails?.estadoSolicitud}</p>
-
                         <List
                             dataSource={selectedSolicitudDetails?.detalles || []}
                             header={<Text strong>Materiales Solicitados</Text>}
@@ -257,13 +326,13 @@ const GestionSolicitudesPage: React.FC = () => {
                 )}
             </Modal>
 
-            {/* --- ⬇️ 4. MODAL PARA FECHA DE APROBACIÓN ⬇️ --- */}
+            {/* Modal Aprobación con Fecha/Hora */}
             <Modal
                 title={`Aprobar Solicitud #${solicitudToApprove?.id}`}
                 open={isApproveModalVisible}
-                onOk={handleConfirmApprove} // Llama a la lógica de aprobación
+                onOk={handleConfirmApprove}
                 onCancel={handleCancelApproveModal}
-                confirmLoading={isApproving} // Muestra carga en el botón OK
+                confirmLoading={isApproving}
                 okText="Aprobar Préstamo"
                 cancelText="Cancelar"
             >
@@ -271,16 +340,13 @@ const GestionSolicitudesPage: React.FC = () => {
                     Por favor, selecciona la fecha y hora de devolución prevista para este préstamo.
                 </Typography.Paragraph>
                 <DatePicker
-                    showTime // Permitir seleccionar hora
+                    showTime
                     value={selectedReturnDate}
                     onChange={(date) => setSelectedReturnDate(date)}
-                    disabledDate={(current) => {
-                        // No se pueden seleccionar días anteriores al inicio de hoy
-                        return current && current < dayjs().startOf('day');
-                    }}
+                    disabledDate={(current) => current && current < dayjs().startOf('day')}
                     style={{ width: '100%' }}
                     placeholder="Selecciona fecha y hora"
-                    format="YYYY-MM-DD HH:mm:ss" // Formato para incluir hora
+                    format="YYYY-MM-DD HH:mm:ss"
                 />
             </Modal>
         </div>

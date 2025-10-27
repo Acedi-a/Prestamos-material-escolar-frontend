@@ -8,7 +8,6 @@ import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
 import ReparacionesPage from "./pages/encargadoPages/ReparacionesPage";
 import MovimientosPage from "./pages/encargadoPages/MovimientosPage";
 import PrestamosPage from "./pages/encargadoPages/PrestamosPage";
-import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 import SolicitarMaterialPage from "./pages/docentePages/SolicitarMaterialPage";
 import MisSolicitudesPage from "./pages/docentePages/MisSolicitudesPage";
@@ -38,11 +37,10 @@ export const AppRoutes = () => {
         return (
             <Routes>
                 <Route element={<DocenteLayout />}>
-                    <Route path="/docente" element={<DocenteDashboard />} />
                     <Route path="/docente/solicitar" element={<SolicitarMaterialPage />} />
                     <Route path="/docente/solicitudes" element={<MisSolicitudesPage />} />
                 </Route>
-                <Route path="*" element={<Navigate to="/docente" replace />} />
+                <Route path="*" element={<Navigate to="/docente/solicitar" replace />} />
             </Routes>
         );
     }

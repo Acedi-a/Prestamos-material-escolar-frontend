@@ -21,7 +21,6 @@ const DocenteLayout: React.FC = () => {
 
   // Añadimos los nuevos items de navegación
   const nav: NavItem[] = [
-    { key: "/docente", label: "Inicio", icon: <HomeOutlined /> },
     { key: "/docente/solicitar", label: "Solicitar Material", icon: <ShoppingOutlined /> }, 
     { key: "/docente/solicitudes", label: "Mis Solicitudes", icon: <HistoryOutlined /> }, 
   ];
