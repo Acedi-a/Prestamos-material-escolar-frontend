@@ -10,6 +10,7 @@ import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 import SolicitarMaterialPage from "./pages/docentePages/SolicitarMaterialPage";
 import MisSolicitudesPage from "./pages/docentePages/MisSolicitudesPage";
+import GestionSolicitudesPage from "./pages/encargadoPages/GestionSolicitudesPage";
 
 export const AppRoutes = () => {
     const { isAuthenticated, user, isReady } = useAuth();
@@ -53,6 +54,7 @@ export const AppRoutes = () => {
                     <Route path="/reparaciones" element={<ReparacionesPage />} />
                 <Route path="/usuarioslistar" element={<UsuariosPage />} />
                 <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
+                <Route path="/solicitudes" element={<GestionSolicitudesPage />} />
             </Route>
             <Route path="*" element={<Navigate to="/materiales" replace />} />
         </Routes>
