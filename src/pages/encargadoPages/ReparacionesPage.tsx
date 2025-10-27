@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Table, Tag, Typography, message } from "antd";
+import { Button, Table, Tag, Typography, message } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { getAllReparaciones, IReparacion } from "../../lib/api/reparaciones";
+import { completarReparacion, getAllReparaciones, IReparacion } from "../../lib/api/reparaciones";
 
 const { Title } = Typography;
 
 const ReparacionesPage: React.FC = () => {
 	const [data, setData] = useState<IReparacion[]>([]);
 	const [loading, setLoading] = useState(false);
+	const [completing, setCompleting] = useState<Set<number>>(new Set());
 
 	const fetchData = async () => {
 		try {
@@ -31,6 +32,21 @@ const ReparacionesPage: React.FC = () => {
 
 	const dateFmt = (iso?: string | null) =>
 		iso ? new Date(iso).toLocaleString() : "-";
+
+	const handleCompletar = async (rep: IReparacion) => {
+		const nowIso = new Date().toISOString();
+		try {
+			setCompleting((prev) => new Set(prev).add(rep.id));
+			await completarReparacion({ reparacionId: rep.id, fechaRetorno: nowIso });
+			// Actualizar estado localmente para evitar refetch completo
+			setData((prev) => prev.map((r) => r.id === rep.id ? { ...r, fechaRetorno: nowIso } : r));
+			message.success("Reparación completada");
+		} catch (e) {
+			message.error("No se pudo completar la reparación");
+		} finally {
+			setCompleting((prev) => { const n = new Set(prev); n.delete(rep.id); return n; });
+		}
+	};
 
 	const columns: ColumnsType<IReparacion> = [
 		{
@@ -74,6 +90,21 @@ const ReparacionesPage: React.FC = () => {
 			key: "fechaRetorno",
 			render: (iso?: string | null) => (
 				iso ? <Tag color="green">{dateFmt(iso)}</Tag> : <Tag color="orange">En reparación</Tag>
+			),
+		},
+		{
+			title: "Acciones",
+			key: "acciones",
+			render: (_: any, rec) => (
+				rec.fechaRetorno ? null : (
+					<Button
+						type="primary"
+						onClick={() => handleCompletar(rec)}
+						loading={completing.has(rec.id)}
+					>
+						Completar
+					</Button>
+				)
 			),
 		},
 	];

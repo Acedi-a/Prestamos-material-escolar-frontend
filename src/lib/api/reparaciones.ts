@@ -46,3 +46,12 @@ export const updateReparacion = (id: number, body: UpdateReparacionRequest) =>
 
 // DELETE /api/Reparacion/{id}
 export const deleteReparacion = (id: number) => api.delete(`/api/Reparacion/${id}`);
+
+// POST /api/Reparacion/completar
+export interface CompletarReparacionRequest {
+  reparacionId: number;
+  fechaRetorno: string; // ISO
+}
+
+export const completarReparacion = (payload: CompletarReparacionRequest) =>
+  api.post("/api/Reparacion/completar", payload);
