@@ -7,6 +7,7 @@ import MaterialPage from "./pages/encargadoPages/materialPage";
 import CrearUsuarioDocentePage from "./pages/encargadoPages/DocenteCrearPage";
 import ReparacionesPage from "./pages/encargadoPages/ReparacionesPage";
 import MovimientosPage from "./pages/encargadoPages/MovimientosPage";
+import PrestamosPage from "./pages/encargadoPages/PrestamosPage";
 import DocenteDashboard from "./pages/docentePages/DocenteDashboard";
 import UsuariosPage from "./pages/encargadoPages/UsuariosPage";
 import SolicitarMaterialPage from "./pages/docentePages/SolicitarMaterialPage";
@@ -54,6 +55,7 @@ export const AppRoutes = () => {
                 <Route path="/docentecrear" element={<CrearUsuarioDocentePage />} />
                     <Route path="/reparaciones" element={<ReparacionesPage />} />
                 <Route path="/movimientos" element={<MovimientosPage />} />
+                <Route path="/prestamos" element={<PrestamosPage />} />
                 <Route path="/usuarioslistar" element={<UsuariosPage />} />
                 <Route path="/docentecrear/usuario/:usuarioId" element={<CrearUsuarioDocentePage />} />
                 <Route path="/solicitudes" element={<GestionSolicitudesPage />} />

@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ToolOutlined, ScheduleOutlined,SwapOutlined } from "@ant-design/icons";
+import { DatabaseOutlined, LogoutOutlined, UserAddOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ToolOutlined, ScheduleOutlined, SwapOutlined, FileDoneOutlined } from "@ant-design/icons";
 import { useAuth } from "../../context/AuthContext";
 import { useMemo, useState } from "react";
 
@@ -18,6 +18,7 @@ const EncargadoLayout: React.FC = () => {
     { key: "/usuarioslistar", label: "Usuarios", icon: <UserOutlined /> },
     { key: "/solicitudes", label: "Gestionar Solicitudes", icon: <ScheduleOutlined /> },
     { key: "/reparaciones", label: "Reparaciones", icon: <ToolOutlined /> },
+    { key: "/prestamos", label: "Préstamos", icon: <FileDoneOutlined /> },
     { key: "/movimientos", label: "Movimientos", icon: <SwapOutlined /> },
   ];
 
