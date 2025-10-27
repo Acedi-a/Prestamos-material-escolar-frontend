@@ -1,5 +1,13 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { HomeOutlined, LogoutOutlined, UserOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { 
+    HomeOutlined, 
+    LogoutOutlined, 
+    UserOutlined, 
+    MenuFoldOutlined, 
+    MenuUnfoldOutlined,
+    ShoppingOutlined, // Importado
+    HistoryOutlined  // Importado
+} from "@ant-design/icons";
 import { useAuth } from "../../context/AuthContext";
 import { useMemo, useState } from "react";
 
@@ -11,14 +19,31 @@ const DocenteLayout: React.FC = () => {
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
 
+  // Añadimos los nuevos items de navegación
   const nav: NavItem[] = [
     { key: "/docente", label: "Inicio", icon: <HomeOutlined /> },
+    { key: "/docente/solicitar", label: "Solicitar Material", icon: <ShoppingOutlined /> }, 
+    { key: "/docente/solicitudes", label: "Mis Solicitudes", icon: <HistoryOutlined /> }, 
   ];
 
+  // Lógica para resaltar el menú activo (considerando subrutas)
   const selectedKeys = (() => {
-    const match = nav.find((i) => location.pathname.startsWith(i.key));
+    let match = nav.find((i) => location.pathname === i.key); // Busca match exacto
+    if (!match) {
+        // Si no hay match exacto, busca el que "empieza con" más largo
+        const matchingItems = nav.filter((i) => location.pathname.startsWith(i.key) && i.key !== "/");
+        if (matchingItems.length > 0) {
+            // Ordena por longitud de key descendente y toma el primero
+            match = matchingItems.sort((a, b) => b.key.length - a.key.length)[0];
+        }
+    }
+    // Si aún no hay match (ej. ruta no encontrada), selecciona "Inicio" por defecto si estamos en /docente/*
+    if (!match && location.pathname.startsWith('/docente')) {
+        match = nav.find(i => i.key === '/docente');
+    }
     return match ? [match.key] : [];
   })();
+
 
   const initials = useMemo(() => {
     const name = user?.nombreUsuario || user?.email || "U";
