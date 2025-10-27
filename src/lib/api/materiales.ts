@@ -8,6 +8,9 @@ export interface IMaterial {
 	cantidadTotal: number;
 	cantidadDisponible: number;
 	estado: string;
+	// conteos opcionales traídos desde endpoint /api/Material/{id}/conteos
+	prestados?: number;
+	enReparacion?: number;
 }
 
 export const getAllMaterials = () => api.get<IMaterial[]>("/api/Material");
@@ -24,6 +27,10 @@ export const updateMaterialStatus = (id: number, estado: string) =>
 	api.put(`/api/Material/${id}/estado`, { estado });
 export const getMaterialAvailability = (id: number) =>
 	api.get<{ cantidadDisponible: number; estado: string }>(`/api/Material/${id}/disponibilidad`);
+
+// GET: /api/Material/{id}/conteos -> { id, nombre, prestados, enReparacion }
+export const getMaterialConteos = (id: number) =>
+  api.get<{ id: number; nombre: string; prestados: number; enReparacion: number }>(`/api/Material/${id}/conteos`);
 
 
 // --- Nuevas Interfaces para Solicitudes ---

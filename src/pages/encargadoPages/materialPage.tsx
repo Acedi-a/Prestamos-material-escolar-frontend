@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllMaterials, createMaterial, updateMaterialStatus, updateMaterial, getMaterialById, IMaterial } from '../../lib/api/materiales';
+import { getAllMaterials, createMaterial, updateMaterialStatus, updateMaterial, getMaterialById, getMaterialConteos, IMaterial } from '../../lib/api/materiales';
 import { getAllCategories, createCategory, updateCategory, deleteCategory, ICategoria } from '../../lib/api/categoria';
 import { registrarReparacion } from '../../lib/api/reparaciones';
 import {
@@ -47,7 +47,17 @@ const MaterialPage: React.FC = () => {
         getAllMaterials(),
         getAllCategories()
       ]);
-      setMaterials(materialsRes.data);
+      // Merge counts (prestados, enReparacion) provided by backend endpoint /api/Material/{id}/conteos
+      const baseMaterials = materialsRes.data as IMaterial[];
+      const detailed = await Promise.all(baseMaterials.map(async (m) => {
+        try {
+          const resp = await getMaterialConteos(m.id);
+          return { ...m, prestados: resp.data.prestados, enReparacion: resp.data.enReparacion } as IMaterial;
+        } catch {
+          return m;
+        }
+      }));
+      setMaterials(detailed);
       setCategories(categoriesRes.data);
     } catch (error) {
       message.error('Error al cargar los datos');
@@ -100,9 +110,18 @@ const MaterialPage: React.FC = () => {
       };
 
       await registrarReparacion(payload);
-      // Obtener material actualizado y actualizar en lista
-      const updated = await getMaterialById(selectedMaterial.id);
-      setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updated.data : m));
+      // Obtener material actualizado (datos) y conteos desde backend
+      const [updatedRes, conteosRes] = await Promise.all([
+        getMaterialById(selectedMaterial.id),
+        getMaterialConteos(selectedMaterial.id),
+      ]);
+      const updatedMaterial = {
+        ...updatedRes.data,
+        prestados: conteosRes.data.prestados,
+        enReparacion: conteosRes.data.enReparacion,
+      } as IMaterial;
+      // Actualizar en la lista
+      setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updatedMaterial : m));
       message.success('Enviado a reparación correctamente');
       setReparacionModalVisible(false);
     } catch (error: any) {
@@ -115,8 +134,13 @@ const MaterialPage: React.FC = () => {
       const values = await form.validateFields();
       if (selectedMaterial) {
         await updateMaterial(selectedMaterial.id, values);
-        const updated = await getMaterialById(selectedMaterial.id);
-        setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updated.data : m));
+        // Traer datos completos y conteos
+        const [updatedRes, conteosRes] = await Promise.all([
+          getMaterialById(selectedMaterial.id),
+          getMaterialConteos(selectedMaterial.id),
+        ]);
+        const updatedMaterial = { ...updatedRes.data, prestados: conteosRes.data.prestados, enReparacion: conteosRes.data.enReparacion } as IMaterial;
+        setMaterials(prev => prev.map(m => m.id === selectedMaterial.id ? updatedMaterial : m));
         message.success('Material actualizado exitosamente');
       } else {
         // Al crear, cantidadDisponible = cantidadTotal
@@ -124,8 +148,12 @@ const MaterialPage: React.FC = () => {
         const res = await createMaterial(toSend);
         const newId = res.data?.id;
         if (newId) {
-          const created = await getMaterialById(newId);
-          setMaterials(prev => [created.data, ...prev]);
+          const [createdRes, conteosRes] = await Promise.all([
+            getMaterialById(newId),
+            getMaterialConteos(newId),
+          ]);
+          const createdMaterial = { ...createdRes.data, prestados: conteosRes.data.prestados, enReparacion: conteosRes.data.enReparacion } as IMaterial;
+          setMaterials(prev => [createdMaterial, ...prev]);
         } else {
           await fetchData();
         }
@@ -140,8 +168,14 @@ const MaterialPage: React.FC = () => {
   const handleStatusUpdate = async (id: number, estado: string) => {
     try {
       await updateMaterialStatus(id, estado);
+      // Obtener datos y conteos actualizados para refrescar la fila
+      const [updatedRes, conteosRes] = await Promise.all([
+        getMaterialById(id),
+        getMaterialConteos(id),
+      ]);
+      const updatedMaterial = { ...updatedRes.data, prestados: conteosRes.data.prestados, enReparacion: conteosRes.data.enReparacion } as IMaterial;
+      setMaterials(prev => prev.map(m => m.id === id ? updatedMaterial : m));
       message.success('Estado actualizado exitosamente');
-      fetchData();
     } catch (error) {
       message.error('Error al actualizar el estado');
     }
@@ -210,6 +244,18 @@ const MaterialPage: React.FC = () => {
       title: 'Cantidad Disponible',
       dataIndex: 'cantidadDisponible',
       key: 'cantidadDisponible',
+    },
+    {
+      title: 'Prestados',
+      dataIndex: 'prestados',
+      key: 'prestados',
+      render: (v: number) => v ?? 0,
+    },
+    {
+      title: 'En reparación',
+      dataIndex: 'enReparacion',
+      key: 'enReparacion',
+      render: (v: number) => v ?? 0,
     },
     {
       title: 'Descripción',
